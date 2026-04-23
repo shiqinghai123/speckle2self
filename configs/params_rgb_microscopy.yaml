@@ -1,0 +1,29 @@
+data:
+  type: cca
+  image_dir: data/rgb_microscopy
+  interp_method: linear
+  channels: 3
+
+training:
+  lr: 0.0005
+  batch_size: 8
+  optimizer: adam
+  b1: 0.5
+  b2: 0.999
+  epoch: 1200
+  print_every: 50
+  checkpoint_every: 200
+  visualize_every: 200
+  save_after_epoch: 100
+  output_dir: save_models/rgb_microscopy
+
+  loss_rec: L1
+  loss_consist: L1
+
+  High_res_weight_rec: 1.0
+  Mid_res_weight_rec: 1.0
+  Low_res_weight_rec: 1.0
+
+  Hl_res_weight_consist: 1.0
+  HM_res_weight_consist: 1.0
+  ML_res_weight_consist: 1.0

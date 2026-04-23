@@ -7,27 +7,28 @@ from utils.training_utils import init_random_seed, train_loop
 
 import argparse
 
+
 def main(cfg_path):
     with open(cfg_path, 'r') as f:
         cfg = yaml.safe_load(f)
 
     init_random_seed(cfg.get('seed', 777))
 
-    # Setup
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     os.makedirs(cfg['training']['output_dir'], exist_ok=True)
     os.makedirs(os.path.join(cfg['training']['output_dir'], "save_model"), exist_ok=True)
 
-    # Dataset
+    channels = cfg['data'].get('channels', 1)
+
     dataset_type = cfg['data'].get('type', 'cca').lower()
     if dataset_type == 'cca':
-        dataset = DenoisingDatasetCCA(cfg['data']['image_dir'], cfg['data']['interp_method'])
+        dataset = DenoisingDatasetCCA(cfg['data']['image_dir'], cfg['data']['interp_method'], channels=channels)
     elif dataset_type == 'simulator':
-        dataset = DenoisingDatasetSimulator(cfg['data']['image_dir'], cfg['data']['interp_method'])
+        dataset = DenoisingDatasetSimulator(cfg['data']['image_dir'], cfg['data']['interp_method'], channels=channels)
     else:
         raise ValueError("Unsupported dataset type.")
 
-    model = SpeckleReductionNet().to(device)
+    model = SpeckleReductionNet(channels=channels).to(device)
 
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -39,12 +40,7 @@ def main(cfg_path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser() 
-
-    # In vivo dataset
-    # parser.add_argument('--config', type=str, default='configs/params_inVivo.yaml', help='Path to config file')
-    
-    # Simulator dataset
+    parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='configs/params_Simulator.yaml', help='Path to config file')
 
     args = parser.parse_args()
