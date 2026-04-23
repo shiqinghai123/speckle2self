@@ -13,10 +13,15 @@ def linear_normalization(image, per_channel=False):
         max_value = np.max(image)
 
     denom = max_value - min_value
-    if np.any(denom == 0):
-        return np.zeros_like(image, dtype=np.float32)
+    if np.isscalar(denom):
+        if denom == 0:
+            return np.zeros_like(image, dtype=np.float32)
+        normalized_image = (image - min_value) / denom
+        return normalized_image.astype(np.float32)
 
-    normalized_image = (image - min_value) / denom
+    safe_denom = np.where(denom == 0, 1.0, denom)
+    normalized_image = (image - min_value) / safe_denom
+    normalized_image = np.where(denom == 0, 0.0, normalized_image)
     return normalized_image.astype(np.float32)
 
 
@@ -50,6 +55,10 @@ def remove_stripe_noise(image, sigma_x=9, sigma_y=1):
 
 def flat_field_correction(image, blur_ksize=101):
     """Estimate smooth illumination field and divide to flatten background."""
+    blur_ksize = max(3, int(blur_ksize))
+    if blur_ksize % 2 == 0:
+        blur_ksize += 1
+
     image_f = image.astype(np.float32) + 1e-6
     background = cv2.GaussianBlur(image_f, (blur_ksize, blur_ksize), 0)
     corrected = image_f / (background + 1e-6)
